@@ -1,5 +1,6 @@
 from telethon import TelegramClient, events
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from flask import Flask
 import asyncio
 import random
 
@@ -9,9 +10,10 @@ API_HASH = '5f36b5ce8197b8e3fea1bf292e4a5972'
 PHONE_NUMBER = '0398213010'
 receiver_username = '@zingpanel_bot'  # Tên bot nhận tin nhắn
 
-# Khởi tạo client và scheduler
+# Khởi tạo client, scheduler và Flask
 client = TelegramClient('session_name', API_ID, API_HASH)
 scheduler = AsyncIOScheduler()
+app = Flask(__name__)
 
 # Biến lưu giá trị ngẫu nhiên mỗi ngày
 daily_values = {}
@@ -21,7 +23,7 @@ def generate_daily_values():
     global daily_values
     daily_values = {
         "checkin_hour": random.randint(6, 7),
-        "checkin_minute": random.randint(0, 40),
+        "checkin_minute": random.randint(0, 59),
         "report_hour": random.randint(19, 22),
         "report_minute": random.randint(0, 59),
         "xx": random.randint(3, 9),  # Số người Tawk
@@ -66,13 +68,22 @@ def schedule_daily_jobs():
 # Lên lịch reset lịch trình hàng ngày vào 00:00
 scheduler.add_job(generate_daily_values, 'cron', hour=0, minute=0)
 
-async def main():
-    """Khởi chạy bot"""
+@app.route('/')
+def home():
+    """Endpoint kiểm tra trạng thái"""
+    return "Telegram Bot is running on Render!"
+
+async def start_telegram():
+    """Chạy Telegram bot"""
     await client.start(PHONE_NUMBER)
-    generate_daily_values()  # Tạo giá trị ngẫu nhiên ngay khi khởi động
+    generate_daily_values()
     scheduler.start()
-    print("🚀 Bot đang chạy...")
+    print("🚀 Telegram Bot is running...")
     await client.run_until_disconnected()
 
-# Chạy bot
-asyncio.run(main())
+if __name__ == '__main__':
+    # Tạo asyncio loop để chạy song song Telegram bot và Flask
+    loop = asyncio.get_event_loop()
+    loop.create_task(start_telegram())
+    app.run(host='0.0.0.0', port=8080)  # Flask lắng nghe trên port 8080
+
