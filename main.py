@@ -23,7 +23,7 @@ def generate_daily_values():
     global daily_values
     daily_values = {
         "checkin_hour": random.randint(6, 7),
-        "checkin_minute": random.randint(0, 59),
+        "checkin_minute": random.randint(0, 40),
         "report_hour": random.randint(19, 22),
         "report_minute": random.randint(0, 59),
         "xx": random.randint(3, 9),  # Số người Tawk
